@@ -1,5 +1,5 @@
 {
-  "name": "CardScore",
-  "description": "A simple, elegant card game scorekeeper that allows you to track scores round-by-round with history editing capabilities.",
+  "name": "Scorecard",
+  "description": "A scorecard app for card and board games. Tracks scores round-by-round, calculates totals automatically, and saves your game progress to your browser so you never lose track of who is winning.",
   "requestFramePermissions": []
 }

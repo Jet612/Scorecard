@@ -1,29 +1,30 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { 
-  Users, 
-  ChevronLeft, 
-  ChevronRight, 
-  Plus, 
-  Trophy, 
-  RotateCcw, 
+import {
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Trophy,
+  RotateCcw,
   Trash2,
   Edit2,
   ArrowUp,
   ArrowDown,
-  ChevronDown
+  ChevronDown,
+  Github
 } from 'lucide-react';
 import { Player, RoundScores } from './types';
 
 // --- Utility Components ---
 
-const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' }> = ({ 
-  className = '', 
-  variant = 'primary', 
-  children, 
-  ...props 
+const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' }> = ({
+  className = '',
+  variant = 'primary',
+  children,
+  ...props
 }) => {
   const baseStyles = "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
-  
+
   const variants = {
     primary: "bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-sm",
     secondary: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:ring-primary-500 shadow-sm",
@@ -52,7 +53,7 @@ export default function App() {
   // State - Initialized from LocalStorage if available
   const [players, setPlayers] = useState<Player[]>(() => {
     try {
-      const saved = localStorage.getItem('cardScore_players');
+      const saved = localStorage.getItem('scorecard_players');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       console.error('Failed to load players from storage', e);
@@ -62,7 +63,7 @@ export default function App() {
 
   const [rounds, setRounds] = useState<RoundScores[]>(() => {
     try {
-      const saved = localStorage.getItem('cardScore_rounds');
+      const saved = localStorage.getItem('scorecard_rounds');
       return saved ? JSON.parse(saved) : [{}];
     } catch (e) {
       console.error('Failed to load rounds from storage', e);
@@ -72,7 +73,7 @@ export default function App() {
 
   const [activeRoundIndex, setActiveRoundIndex] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('cardScore_activeRoundIndex');
+      const saved = localStorage.getItem('scorecard_activeRoundIndex');
       return saved ? parseInt(saved, 10) : 0;
     } catch (e) {
       return 0;
@@ -81,7 +82,7 @@ export default function App() {
 
   const [winCondition, setWinCondition] = useState<'high' | 'low'>(() => {
     try {
-      const saved = localStorage.getItem('cardScore_winCondition');
+      const saved = localStorage.getItem('scorecard_winCondition');
       return (saved === 'high' || saved === 'low') ? saved : 'high';
     } catch (e) {
       return 'high';
@@ -90,15 +91,15 @@ export default function App() {
 
   const [sortBy, setSortBy] = useState<SortOption>(() => {
     try {
-      const saved = localStorage.getItem('cardScore_sortBy');
-      return (saved && ['default', 'scoreDesc', 'scoreAsc', 'nameAsc'].includes(saved)) 
-        ? (saved as SortOption) 
+      const saved = localStorage.getItem('scorecard_sortBy');
+      return (saved && ['default', 'scoreDesc', 'scoreAsc', 'nameAsc'].includes(saved))
+        ? (saved as SortOption)
         : 'default';
     } catch (e) {
       return 'default';
     }
   });
-  
+
   // UI State
   const [isAddPlayerModalOpen, setIsAddPlayerModalOpen] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -106,23 +107,23 @@ export default function App() {
 
   // Persistence Effects
   useEffect(() => {
-    localStorage.setItem('cardScore_players', JSON.stringify(players));
+    localStorage.setItem('scorecard_players', JSON.stringify(players));
   }, [players]);
 
   useEffect(() => {
-    localStorage.setItem('cardScore_rounds', JSON.stringify(rounds));
+    localStorage.setItem('scorecard_rounds', JSON.stringify(rounds));
   }, [rounds]);
 
   useEffect(() => {
-    localStorage.setItem('cardScore_activeRoundIndex', activeRoundIndex.toString());
+    localStorage.setItem('scorecard_activeRoundIndex', activeRoundIndex.toString());
   }, [activeRoundIndex]);
 
   useEffect(() => {
-    localStorage.setItem('cardScore_winCondition', winCondition);
+    localStorage.setItem('scorecard_winCondition', winCondition);
   }, [winCondition]);
 
   useEffect(() => {
-    localStorage.setItem('cardScore_sortBy', sortBy);
+    localStorage.setItem('scorecard_sortBy', sortBy);
   }, [sortBy]);
 
   // Derived State
@@ -141,21 +142,21 @@ export default function App() {
   }, [players, rounds]);
 
   const currentRoundScores = rounds[activeRoundIndex] || {};
-  
+
   // Calculate leader based on win condition
   const leaderId = useMemo(() => {
     if (players.length === 0) return null;
-    
+
     // If everyone has 0 points (start of game), don't show a leader
     const allZero = players.every(p => totalScores[p.id] === 0);
     if (allZero) return null;
 
     let bestScore = winCondition === 'high' ? -Infinity : Infinity;
     let leader = null;
-    
+
     for (const p of players) {
       const score = totalScores[p.id];
-      
+
       if (winCondition === 'high') {
         if (score > bestScore) {
           bestScore = score;
@@ -193,12 +194,12 @@ export default function App() {
   const handleAddPlayer = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPlayerName.trim()) return;
-    
+
     const newPlayer: Player = {
       id: Date.now().toString(),
       name: newPlayerName.trim()
     };
-    
+
     setPlayers([...players, newPlayer]);
     setNewPlayerName('');
     setIsAddPlayerModalOpen(false);
@@ -207,7 +208,7 @@ export default function App() {
   const handleScoreChange = (playerId: string, value: string) => {
     // Allow empty string for better typing experience, treat as 0 or undefined internally
     const numValue = value === '' ? 0 : parseInt(value, 10);
-    
+
     if (isNaN(numValue)) return; // Prevent non-numeric input (though type="number" handles most)
 
     setRounds(prev => {
@@ -271,61 +272,95 @@ export default function App() {
             <div className="bg-primary-600 text-white p-2 rounded-lg">
               <Trophy size={20} />
             </div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight hidden sm:block">CardScore</h1>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight hidden sm:block">Scorecard</h1>
           </div>
-          
+
           <div className="flex items-center gap-2">
-             {/* Win Condition Toggle */}
-             <button
-               onClick={toggleWinCondition}
-               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors mr-1 sm:mr-2"
-               title={`Click to change: Winner has ${winCondition === 'high' ? 'highest' : 'lowest'} score`}
-             >
-               {winCondition === 'high' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-               <span className="hidden sm:inline">{winCondition === 'high' ? 'High Wins' : 'Low Wins'}</span>
-               <span className="sm:hidden">{winCondition === 'high' ? 'High' : 'Low'}</span>
-             </button>
+            {/* Win Condition Toggle */}
+            <button
+              onClick={toggleWinCondition}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors mr-1 sm:mr-2"
+              title={`Click to change: Winner has ${winCondition === 'high' ? 'highest' : 'lowest'} score`}
+            >
+              {winCondition === 'high' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+              <span className="hidden sm:inline">{winCondition === 'high' ? 'High Wins' : 'Low Wins'}</span>
+              <span className="sm:hidden">{winCondition === 'high' ? 'High' : 'Low'}</span>
+            </button>
 
-             <div className="h-6 w-px bg-slate-200 mx-1"></div>
+            <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
-             <Button variant="ghost" onClick={resetGame} title="Reset Scores" className="px-2">
-               <RotateCcw size={18} />
-             </Button>
-             <div className="hidden sm:block text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-               Round {activeRoundIndex + 1}
-             </div>
-             {/* Mobile Round indicator */}
-             <div className="sm:hidden text-sm font-bold text-slate-500">
-               R{activeRoundIndex + 1}
-             </div>
+            <Button variant="ghost" onClick={resetGame} title="Reset Scores" className="px-2">
+              <RotateCcw size={18} />
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-        
+
         {/* Navigation / Round Info */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-slate-800">
-            {activeRoundIndex === rounds.length - 1 && activeRoundIndex > 0 
-              ? "Current Round" 
-              : `Round ${activeRoundIndex + 1}`
-            }
-          </h2>
-          <div className="flex gap-2">
-            <Button 
-              variant="secondary" 
-              onClick={handlePrevRound}
-              disabled={activeRoundIndex === 0}
-            >
-              <ChevronLeft size={16} className="mr-1" /> Prev
-            </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleNextRound}
-            >
-              Next <ChevronRight size={16} className="ml-1" />
-            </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center justify-between w-full sm:w-auto">
+            <h2 className="text-2xl font-bold text-slate-800">
+              {`Round ${activeRoundIndex + 1}`}
+            </h2>
+
+            {/* Mobile Round Navigation */}
+            <div className="flex sm:hidden gap-2 ml-4">
+              <Button
+                variant="secondary"
+                onClick={handlePrevRound}
+                disabled={activeRoundIndex === 0}
+                className="px-2"
+              >
+                <ChevronLeft size={16} />
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleNextRound}
+                className="px-2"
+              >
+                <ChevronRight size={16} />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Sort Controls - Moved here */}
+            {players.length > 0 && (
+              <div className="relative inline-block text-left flex-1 sm:flex-none">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="w-full cursor-pointer appearance-none bg-white border border-slate-200 text-slate-600 hover:border-slate-300 py-2 pl-3 pr-8 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 shadow-sm transition-all"
+                >
+                  <option value="default">Sort: Time</option>
+                  <option value="scoreDesc">Sort: High Score</option>
+                  <option value="scoreAsc">Sort: Low Score</option>
+                  <option value="nameAsc">Sort: Name</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                  <ChevronDown size={14} />
+                </div>
+              </div>
+            )}
+
+            {/* Desktop Round Navigation */}
+            <div className="hidden sm:flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={handlePrevRound}
+                disabled={activeRoundIndex === 0}
+              >
+                <ChevronLeft size={16} className="mr-1" /> Prev
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleNextRound}
+              >
+                Next <ChevronRight size={16} className="ml-1" />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -345,40 +380,21 @@ export default function App() {
           </div>
         ) : (
           <div className="grid gap-4">
-            
-            {/* Sort Controls */}
-            <div className="flex justify-end">
-              <div className="relative inline-block text-left">
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="cursor-pointer appearance-none bg-white border border-slate-200 text-slate-600 hover:border-slate-300 py-1.5 pl-3 pr-8 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 shadow-sm transition-all"
-                >
-                  <option value="default">Sort: Added Time</option>
-                  <option value="scoreDesc">Sort: Highest Score</option>
-                  <option value="scoreAsc">Sort: Lowest Score</option>
-                  <option value="nameAsc">Sort: Name (A-Z)</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                   <ChevronDown size={14} />
-                </div>
-              </div>
-            </div>
 
             {/* Player List */}
             {sortedPlayers.map((player) => (
-              <Card key={player.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:shadow-md">
+              <Card key={player.id} className="p-4 flex flex-row items-center justify-between gap-4 transition-all hover:shadow-md xs:flex-col">
                 <div className="flex items-center gap-4 flex-1">
-                  {/* Rank/Avatar */}
+                  {/* Rank/Avatar - Hidden on mobile, shown on sm and up */}
                   <div className={`
-                    w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0
-                    ${leaderId === player.id 
-                      ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400 ring-offset-2' 
+                      hidden sm:flex w-12 h-12 rounded-full items-center justify-center text-lg font-bold shrink-0
+                      ${leaderId === player.id
+                      ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400 ring-offset-2'
                       : 'bg-slate-100 text-slate-600'}
-                  `}>
+                    `}>
                     {player.name.charAt(0).toUpperCase()}
                   </div>
-                  
+
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-slate-900 truncate text-lg">
@@ -414,9 +430,9 @@ export default function App() {
                       />
                     </div>
                   </div>
-                  
+
                   {/* Quick Delete Option */}
-                  <button 
+                  <button
                     onClick={() => setShowDeleteConfirm(player.id)}
                     className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                     title="Remove Player"
@@ -428,8 +444,8 @@ export default function App() {
             ))}
 
             <div className="flex justify-center mt-6">
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 className="w-full sm:w-auto"
                 onClick={() => setIsAddPlayerModalOpen(true)}
               >
@@ -490,6 +506,18 @@ export default function App() {
         </div>
       )}
 
+      {/* Footer */}
+      <footer className="py-6 text-center text-slate-400 text-sm">
+        <a
+          href="https://github.com/jet612/scorecard"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 hover:text-slate-600 transition-colors"
+        >
+          <Github size={16} />
+          <span>View on GitHub</span>
+        </a>
+      </footer>
     </div>
   );
 }
