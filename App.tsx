@@ -143,34 +143,30 @@ export default function App() {
 
   const currentRoundScores = rounds[activeRoundIndex] || {};
 
-  // Calculate leader based on win condition
-  const leaderId = useMemo(() => {
-    if (players.length === 0) return null;
+  // Calculate leaders based on win condition
+  const leaderIds = useMemo(() => {
+    if (players.length === 0) return [];
 
     // If everyone has 0 points (start of game), don't show a leader
     const allZero = players.every(p => totalScores[p.id] === 0);
-    if (allZero) return null;
+    if (allZero) return [];
 
     let bestScore = winCondition === 'high' ? -Infinity : Infinity;
-    let leader = null;
 
+    // First pass: find the best score
     for (const p of players) {
       const score = totalScores[p.id];
-
       if (winCondition === 'high') {
-        if (score > bestScore) {
-          bestScore = score;
-          leader = p.id;
-        }
+        if (score > bestScore) bestScore = score;
       } else {
-        // Low score wins
-        if (score < bestScore) {
-          bestScore = score;
-          leader = p.id;
-        }
+        if (score < bestScore) bestScore = score;
       }
     }
-    return leader;
+
+    // Second pass: collect all players with that score
+    return players
+      .filter(p => totalScores[p.id] === bestScore)
+      .map(p => p.id);
   }, [players, totalScores, winCondition]);
 
   // Sorted Players
@@ -388,7 +384,7 @@ export default function App() {
                   {/* Rank/Avatar - Hidden on mobile, shown on sm and up */}
                   <div className={`
                       hidden sm:flex w-12 h-12 rounded-full items-center justify-center text-lg font-bold shrink-0
-                      ${leaderId === player.id
+                      ${leaderIds.includes(player.id)
                       ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400 ring-offset-2'
                       : 'bg-slate-100 text-slate-600'}
                     `}>
@@ -400,7 +396,7 @@ export default function App() {
                       <h3 className="font-semibold text-slate-900 truncate text-lg">
                         {player.name}
                       </h3>
-                      {leaderId === player.id && (
+                      {leaderIds.includes(player.id) && (
                         <Trophy size={14} className="text-amber-500 fill-amber-500" />
                       )}
                     </div>
